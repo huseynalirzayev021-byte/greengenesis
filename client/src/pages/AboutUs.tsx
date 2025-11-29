@@ -43,7 +43,7 @@ export default function AboutUs() {
             
             <h1 className="text-4xl lg:text-5xl font-bold text-white mb-6">
               Meet the Students
-              <span className="block text-green-400">Behind EcoAzerbaijan</span>
+              <span className="block text-green-400">Behind GreenGenesis</span>
             </h1>
             
             <p className="text-lg text-white/80 leading-relaxed">
@@ -65,7 +65,7 @@ export default function AboutUs() {
               protect it for future generations."
             </blockquote>
             <p className="text-muted-foreground">
-              - The EcoAzerbaijan Team
+              - The GreenGenesis Team
             </p>
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function AboutUs() {
               <h2 className="text-3xl font-bold mb-6">Why We Started</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
-                  EcoAzerbaijan began as a school project in 2024 when we realized 
+                  GreenGenesis began as a school project in 2024 when we realized 
                   that many of our peers didn't know about the environmental challenges 
                   facing our country. From the declining Caspian sturgeon population 
                   to increasing air pollution in Baku, we felt compelled to act.
@@ -236,8 +236,8 @@ export default function AboutUs() {
               </p>
               <div className="flex items-center justify-center gap-2 text-primary font-medium">
                 <Mail className="h-4 w-4" />
-                <a href="mailto:info@ecoazerbaijan.az" className="hover:underline">
-                  info@ecoazerbaijan.az
+                <a href="mailto:info@greengenesis.az" className="hover:underline">
+                  info@greengenesis.az
                 </a>
               </div>
             </CardContent>

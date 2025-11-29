@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Leaf, Mail, MapPin, Phone } from "lucide-react";
+import { Sprout, Mail, MapPin, Phone } from "lucide-react";
 import { partnerVendors } from "@/lib/data";
 
 export function Footer() {
@@ -9,10 +9,10 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-                <Leaf className="h-5 w-5 text-primary-foreground" />
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
+                <Sprout className="h-5 w-5 text-white" />
               </div>
-              <span className="font-semibold text-lg">EcoAzerbaijan</span>
+              <span className="font-semibold text-lg bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent">GreenGenesis</span>
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed">
               A student-led initiative dedicated to environmental awareness and protection in Azerbaijan. Together, we can make our country greener.
@@ -60,7 +60,7 @@ export function Footer() {
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="h-4 w-4 flex-shrink-0" />
-                <span>info@ecoazerbaijan.az</span>
+                <span>info@greengenesis.az</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Phone className="h-4 w-4 flex-shrink-0" />
@@ -73,7 +73,7 @@ export function Footer() {
         <div className="mt-12 pt-8 border-t">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              2024 EcoAzerbaijan. A student initiative for a greener future.
+              2024 GreenGenesis. A student initiative for a greener future.
             </p>
             <p className="text-sm text-muted-foreground">
               Made with care for our planet

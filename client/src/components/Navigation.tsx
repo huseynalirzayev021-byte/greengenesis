@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { ThemeToggle } from "./ThemeToggle";
-import { Menu, Leaf, X } from "lucide-react";
+import { Menu, Sprout, X } from "lucide-react";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -40,11 +40,11 @@ export function Navigation() {
         <div className="flex items-center justify-between h-16 gap-4">
           <Link href="/" data-testid="link-logo">
             <div className="flex items-center gap-2 cursor-pointer">
-              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-                <Leaf className="h-5 w-5 text-primary-foreground" />
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
+                <Sprout className="h-5 w-5 text-white" />
               </div>
-              <span className="font-semibold text-lg hidden sm:block">
-                EcoAzerbaijan
+              <span className="font-semibold text-lg hidden sm:block bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent">
+                GreenGenesis
               </span>
             </div>
           </Link>

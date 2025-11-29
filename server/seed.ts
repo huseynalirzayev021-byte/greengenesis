@@ -109,7 +109,7 @@ async function seed() {
     await db.insert(adminUsers).values({
       username: "admin",
       passwordHash,
-      name: "EcoAzerbaijan Admin",
+      name: "GreenGenesis Admin",
       role: "superadmin",
     });
     console.log("Created default admin user (username: admin, password: admin123)");

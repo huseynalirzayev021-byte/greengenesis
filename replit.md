@@ -1,7 +1,7 @@
-# EcoAzerbaijan - Environmental Awareness Platform
+# GreenGenesis - Environmental Awareness Platform
 
 ## Overview
-EcoAzerbaijan is a student-led environmental awareness platform focused on Azerbaijan. The application educates users about environmental facts, provides an impact calculator, offers a rewards program for purchasing trees/plants, and facilitates donations for environmental projects.
+GreenGenesis is a student-led environmental awareness platform focused on Azerbaijan. The application educates users about environmental facts, provides an impact calculator, offers a rewards program for purchasing trees/plants, and facilitates donations for environmental projects.
 
 ## Tech Stack
 - **Frontend**: React, TypeScript, TailwindCSS, Shadcn UI, Wouter (routing)
