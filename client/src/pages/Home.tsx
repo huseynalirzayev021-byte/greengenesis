@@ -1,7 +1,8 @@
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ecoFacts } from "@/lib/data";
+import { useEcoFacts } from "@/lib/data";
 import {
   Leaf,
   TreeDeciduous,
@@ -33,6 +34,9 @@ const iconMap: Record<string, typeof Leaf> = {
 };
 
 export default function Home() {
+  const { t } = useTranslation();
+  const ecoFacts = useEcoFacts();
+
   return (
     <div className="min-h-screen">
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
@@ -51,21 +55,19 @@ export default function Home() {
           </div>
           
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-            Protecting Azerbaijan's
-            <span className="block text-green-400">Natural Heritage</span>
+            {t("home.heroTitle")}
+            <span className="block text-green-400">{t("home.heroTitleHighlight")}</span>
           </h1>
           
           <p className="text-lg sm:text-xl text-white/80 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Join our student-led movement to preserve and enhance the environment. 
-            Learn about our unique ecosystems, earn rewards for planting trees, and 
-            support sustainable initiatives.
+            {t("home.heroDescription")}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/green-rewards">
               <Button size="lg" className="w-full sm:w-auto" data-testid="button-hero-rewards">
                 <TreeDeciduous className="mr-2 h-5 w-5" />
-                Start Planting
+                {t("home.getStarted")}
               </Button>
             </Link>
             <Link href="/awareness">
@@ -75,7 +77,7 @@ export default function Home() {
                 className="w-full sm:w-auto bg-white/10 backdrop-blur-md border-white/30 text-white hover:bg-white/20"
                 data-testid="button-hero-learn"
               >
-                Learn More
+                {t("home.learnMore")}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
@@ -97,21 +99,21 @@ export default function Home() {
                 <Trees className="h-7 w-7 text-primary" />
               </div>
               <div className="text-3xl font-bold text-foreground">2,500+</div>
-              <div className="text-sm text-muted-foreground">Trees Planted</div>
+              <div className="text-sm text-muted-foreground">{t("home.treesPlanted")}</div>
             </div>
             <div className="text-center space-y-2">
               <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
                 <Users className="h-7 w-7 text-primary" />
               </div>
               <div className="text-3xl font-bold text-foreground">500+</div>
-              <div className="text-sm text-muted-foreground">Active Members</div>
+              <div className="text-sm text-muted-foreground">{t("home.activeMembers")}</div>
             </div>
             <div className="text-center space-y-2">
               <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
                 <Heart className="h-7 w-7 text-primary" />
               </div>
               <div className="text-3xl font-bold text-foreground">15,000</div>
-              <div className="text-sm text-muted-foreground">AZN Raised</div>
+              <div className="text-sm text-muted-foreground">{t("home.fundsRaised")}</div>
             </div>
             <div className="text-center space-y-2">
               <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
@@ -128,10 +130,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              10 Facts About Azerbaijan's Environment
+              {t("home.factsTitle")}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Discover the unique environmental characteristics and challenges facing our beautiful country.
+              {t("home.factsSubtitle")}
             </p>
           </div>
 
@@ -174,11 +176,10 @@ export default function Home() {
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="text-center lg:text-left max-w-2xl">
               <h2 className="text-2xl lg:text-3xl font-bold mb-4">
-                Every Tree Makes a Difference
+                {t("home.ctaTitle")}
               </h2>
               <p className="text-primary-foreground/80 text-lg">
-                Purchase trees from our partner vendors and earn rewards. Your contribution 
-                helps offset carbon emissions and creates a greener Azerbaijan.
+                {t("home.ctaDescription")}
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -190,7 +191,7 @@ export default function Home() {
                   data-testid="button-cta-rewards"
                 >
                   <TreeDeciduous className="mr-2 h-5 w-5" />
-                  Join GreenRewards
+                  {t("home.plantTree")}
                 </Button>
               </Link>
               <Link href="/support-us">
@@ -201,7 +202,7 @@ export default function Home() {
                   data-testid="button-cta-donate"
                 >
                   <Heart className="mr-2 h-5 w-5" />
-                  Donate Now
+                  {t("home.joinMovement")}
                 </Button>
               </Link>
             </div>

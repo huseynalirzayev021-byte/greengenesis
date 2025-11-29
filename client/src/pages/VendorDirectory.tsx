@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -52,6 +53,7 @@ const vendorFormSchema = z.object({
 type VendorFormValues = z.infer<typeof vendorFormSchema>;
 
 export default function VendorDirectory() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -81,16 +83,16 @@ export default function VendorDirectory() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
       toast({
-        title: "Registration submitted!",
-        description: "Your vendor registration is pending approval. We'll contact you soon.",
+        title: t("toasts.vendorRegistered"),
+        description: t("toasts.vendorRegisteredDesc"),
       });
       form.reset();
       setIsDialogOpen(false);
     },
     onError: () => {
       toast({
-        title: "Registration failed",
-        description: "Please try again later.",
+        title: t("toasts.vendorRegistrationError"),
+        description: t("toasts.tryAgainLater"),
         variant: "destructive",
       });
     },

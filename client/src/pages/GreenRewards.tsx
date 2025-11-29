@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -80,6 +81,7 @@ interface OcrResult {
 }
 
 export default function GreenRewards() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -133,8 +135,8 @@ export default function GreenRewards() {
       queryClient.invalidateQueries({ queryKey: ["/api/receipts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/rewards"] });
       toast({
-        title: "Receipt submitted!",
-        description: "Your receipt is being reviewed. Points will be awarded upon approval.",
+        title: t("toasts.receiptSubmitted"),
+        description: t("toasts.receiptSubmittedDesc"),
       });
       form.reset();
       setUploadedImageUrl(null);
@@ -142,8 +144,8 @@ export default function GreenRewards() {
     },
     onError: () => {
       toast({
-        title: "Submission failed",
-        description: "Please try again later.",
+        title: t("toasts.receiptError"),
+        description: t("toasts.tryAgainLater"),
         variant: "destructive",
       });
     },
@@ -161,16 +163,16 @@ export default function GreenRewards() {
       queryClient.invalidateQueries({ queryKey: ["/api/withdrawals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/rewards"] });
       toast({
-        title: "Withdrawal request submitted!",
-        description: "Your request is being processed. You will receive your money soon.",
+        title: t("toasts.withdrawalRequested"),
+        description: t("toasts.withdrawalRequestedDesc"),
       });
       withdrawalForm.reset();
       setWithdrawalDialogOpen(false);
     },
     onError: (error: any) => {
       toast({
-        title: "Withdrawal failed",
-        description: error?.message || "Please try again later.",
+        title: t("toasts.withdrawalError"),
+        description: error?.message || t("toasts.tryAgainLater"),
         variant: "destructive",
       });
     },
@@ -214,23 +216,23 @@ export default function GreenRewards() {
         }
         
         toast({
-          title: "Receipt analyzed!",
+          title: t("toasts.receiptAnalyzed"),
           description: ocrData.isPartnerVendor 
-            ? `Found partner vendor: ${ocrData.vendorName}` 
-            : "Data extracted. Please verify the details.",
+            ? t("toasts.partnerVendorFound", { vendor: ocrData.vendorName })
+            : t("toasts.dataExtracted"),
         });
       } else {
         toast({
-          title: "Analysis incomplete",
-          description: "Could not fully analyze the receipt. Please fill in details manually.",
+          title: t("toasts.analysisIncomplete"),
+          description: t("toasts.analysisIncompleteDesc"),
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error("OCR error:", error);
       toast({
-        title: "Analysis failed",
-        description: "Could not analyze receipt. Please fill in details manually.",
+        title: t("toasts.analysisFailed"),
+        description: t("toasts.analysisFailedDesc"),
         variant: "destructive",
       });
     } finally {
@@ -248,8 +250,8 @@ export default function GreenRewards() {
         const data = await response.json();
         setUploadedImageUrl(data.objectPath);
         toast({
-          title: "Image uploaded!",
-          description: "Analyzing receipt with AI...",
+          title: t("toasts.imageUploaded"),
+          description: t("toasts.analyzingReceipt"),
         });
         
         // Automatically analyze the receipt with OCR
@@ -268,24 +270,24 @@ export default function GreenRewards() {
   const getStatusBadge = (status: Receipt["status"]) => {
     switch (status) {
       case "approved":
-        return <Badge variant="default" className="bg-green-600"><CheckCircle className="w-3 h-3 mr-1" />Approved</Badge>;
+        return <Badge variant="default" className="bg-green-600"><CheckCircle className="w-3 h-3 mr-1" />{t("greenRewards.status.approved")}</Badge>;
       case "rejected":
-        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>;
+        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />{t("greenRewards.status.rejected")}</Badge>;
       default:
-        return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
+        return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />{t("greenRewards.status.pending")}</Badge>;
     }
   };
 
   const getWithdrawalStatusBadge = (status: WithdrawalRequest["status"]) => {
     switch (status) {
       case "completed":
-        return <Badge variant="default" className="bg-green-600"><CheckCircle className="w-3 h-3 mr-1" />Completed</Badge>;
+        return <Badge variant="default" className="bg-green-600"><CheckCircle className="w-3 h-3 mr-1" />{t("greenRewards.status.completed")}</Badge>;
       case "approved":
-        return <Badge variant="default" className="bg-blue-600"><Clock className="w-3 h-3 mr-1" />Processing</Badge>;
+        return <Badge variant="default" className="bg-blue-600"><Clock className="w-3 h-3 mr-1" />{t("greenRewards.status.processing")}</Badge>;
       case "rejected":
-        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>;
+        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />{t("greenRewards.status.rejected")}</Badge>;
       default:
-        return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
+        return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />{t("greenRewards.status.pending")}</Badge>;
     }
   };
 
@@ -293,16 +295,16 @@ export default function GreenRewards() {
     const pointsAmount = parseInt(data.pointsAmount);
     if (pointsAmount < 500) {
       toast({
-        title: "Minimum not met",
-        description: "Minimum withdrawal is 500 points (5 AZN).",
+        title: t("toasts.withdrawalError"),
+        description: t("greenRewards.minWithdrawal"),
         variant: "destructive",
       });
       return;
     }
     if (rewards && pointsAmount > rewards.availableForWithdrawal) {
       toast({
-        title: "Insufficient points",
-        description: `You only have ${rewards.availableForWithdrawal} points available.`,
+        title: t("toasts.withdrawalError"),
+        description: t("toasts.tryAgainLater"),
         variant: "destructive",
       });
       return;

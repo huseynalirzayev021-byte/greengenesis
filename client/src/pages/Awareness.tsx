@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { impactComparisons } from "@/lib/data";
+import { useImpactComparisons } from "@/lib/data";
 import {
   Car,
   Plane,
@@ -15,6 +16,9 @@ import {
   AlertTriangle,
   TrendingUp,
   Calculator,
+  Droplets,
+  Wind,
+  Bird,
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -28,6 +32,8 @@ const iconMap: Record<string, typeof Car> = {
 };
 
 export default function Awareness() {
+  const { t } = useTranslation();
+  const impactComparisons = useImpactComparisons();
   const [kmPerYear, setKmPerYear] = useState([15000]);
   const co2Emissions = (kmPerYear[0] * 0.12).toFixed(0);
   const treesNeeded = Math.ceil(Number(co2Emissions) / 21);
@@ -52,14 +58,12 @@ export default function Awareness() {
             </div>
             
             <h1 className="text-4xl lg:text-5xl font-bold text-white mb-6">
-              Environmental Impact
-              <span className="block text-green-400">Awareness</span>
+              {t("awareness.heroTitle")}
+              <span className="block text-green-400">{t("awareness.heroTitleHighlight")}</span>
             </h1>
             
             <p className="text-lg text-white/80 leading-relaxed">
-              Understanding the environmental consequences of our daily activities is the first 
-              step toward positive change. Discover how trees and plants can help offset our 
-              carbon footprint and restore balance to our ecosystem.
+              {t("awareness.heroDescription")}
             </p>
           </div>
         </div>
@@ -71,21 +75,20 @@ export default function Awareness() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Calculator className="h-5 w-5 text-primary" />
-                <span className="text-sm font-medium text-primary">Impact Calculator</span>
+                <span className="text-sm font-medium text-primary">{t("awareness.calculateImpact")}</span>
               </div>
               <h2 className="text-3xl font-bold mb-4">
-                Calculate Your Driving Impact
+                {t("awareness.weeklyDriving")}
               </h2>
               <p className="text-muted-foreground mb-8">
-                See how many trees you need to plant to offset the carbon emissions 
-                from your annual driving. Adjust the slider to match your driving habits.
+                {t("awareness.heroDescription")}
               </p>
 
               <div className="space-y-8">
                 <div>
                   <div className="flex justify-between items-center mb-4">
                     <label className="text-sm font-medium">
-                      Kilometers driven per year
+                      {t("awareness.kmPerWeek")}
                     </label>
                     <span className="text-2xl font-bold text-primary">
                       {kmPerYear[0].toLocaleString()} km
@@ -116,7 +119,7 @@ export default function Awareness() {
                     {Number(co2Emissions).toLocaleString()} kg
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    CO2 Emissions per Year
+                    {t("awareness.carbonFootprint")}
                   </div>
                 </CardContent>
               </Card>
@@ -125,10 +128,10 @@ export default function Awareness() {
                 <CardContent className="p-6 text-center">
                   <TreeDeciduous className="h-10 w-10 text-primary mx-auto mb-4" />
                   <div className="text-3xl font-bold text-primary mb-1">
-                    {treesNeeded} trees
+                    {treesNeeded} {t("awareness.treesNeeded").toLowerCase()}
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    Needed to Offset
+                    {t("awareness.treesToOffset")}
                   </div>
                 </CardContent>
               </Card>
@@ -142,7 +145,7 @@ export default function Awareness() {
                     <div>
                       <div className="text-2xl font-bold">{monthsToOffset} months</div>
                       <div className="text-sm text-muted-foreground">
-                        of tree oxygen production needed to offset 1 year of driving
+                        {t("awareness.yearlyEmissions")}
                       </div>
                     </div>
                   </div>
@@ -157,11 +160,10 @@ export default function Awareness() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              Environmental Impact Comparisons
+              {t("awareness.impactTitle")}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Understanding these equivalencies helps us make better choices and 
-              appreciate the vital role of trees in our ecosystem.
+              {t("awareness.impactSubtitle")}
             </p>
           </div>
 
@@ -199,7 +201,7 @@ export default function Awareness() {
 
                       <div>
                         <div className="text-sm text-muted-foreground mb-1">
-                          Trees Required
+                          {t("awareness.treesNeeded")}
                         </div>
                         <div className="font-semibold text-primary">
                           {comparison.targetAmount}
@@ -223,7 +225,7 @@ export default function Awareness() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl font-bold mb-6">
-                The Power of a Single Tree
+                {t("awareness.benefitsTitle")}
               </h2>
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
@@ -231,42 +233,42 @@ export default function Awareness() {
                     <Leaf className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Oxygen Production</h3>
+                    <h3 className="font-semibold mb-1">{t("awareness.carbonCapture")}</h3>
                     <p className="text-sm text-muted-foreground">
-                      A mature tree produces enough oxygen for 2-4 people annually and absorbs about 21 kg of CO2 per year.
+                      {t("awareness.carbonCaptureDesc")}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Leaf className="h-5 w-5 text-primary" />
+                    <Wind className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Air Purification</h3>
+                    <h3 className="font-semibold mb-1">{t("awareness.airPurification")}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Trees filter pollutants, dust, and particulate matter, improving air quality in urban areas.
+                      {t("awareness.airPurificationDesc")}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Leaf className="h-5 w-5 text-primary" />
+                    <Droplets className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Temperature Regulation</h3>
+                    <h3 className="font-semibold mb-1">{t("awareness.waterProtection")}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Trees can reduce surrounding temperatures by up to 8°C through shade and evapotranspiration.
+                      {t("awareness.waterProtectionDesc")}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Leaf className="h-5 w-5 text-primary" />
+                    <Bird className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Biodiversity Support</h3>
+                    <h3 className="font-semibold mb-1">{t("awareness.wildlifeHabitat")}</h3>
                     <p className="text-sm text-muted-foreground">
-                      A single tree can be home to hundreds of species of insects, birds, and small animals.
+                      {t("awareness.wildlifeHabitatDesc")}
                     </p>
                   </div>
                 </div>
@@ -277,10 +279,9 @@ export default function Awareness() {
               <CardContent className="p-8">
                 <div className="text-center mb-8">
                   <TreeDeciduous className="h-16 w-16 text-primary mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold mb-2">Take Action Today</h3>
+                  <h3 className="text-2xl font-bold mb-2">{t("awareness.startPlanting")}</h3>
                   <p className="text-muted-foreground">
-                    Every tree you plant makes a real difference. Join our GreenRewards 
-                    program and earn points while helping the environment.
+                    {t("awareness.benefitsSubtitle")}
                   </p>
                 </div>
 
@@ -288,12 +289,12 @@ export default function Awareness() {
                   <Link href="/green-rewards">
                     <Button className="w-full" size="lg" data-testid="button-awareness-join">
                       <TreeDeciduous className="mr-2 h-5 w-5" />
-                      Join GreenRewards
+                      {t("nav.greenRewards")}
                     </Button>
                   </Link>
                   <Link href="/support-us">
                     <Button variant="outline" className="w-full" size="lg" data-testid="button-awareness-support">
-                      Support Our Mission
+                      {t("nav.supportUs")}
                     </Button>
                   </Link>
                 </div>

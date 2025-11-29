@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -44,6 +45,7 @@ type DonationFormValues = z.infer<typeof donationFormSchema>;
 const presetAmounts = [5, 10, 25, 50, 100];
 
 export default function SupportUs() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [customAmount, setCustomAmount] = useState(false);
 
@@ -78,15 +80,15 @@ export default function SupportUs() {
       queryClient.invalidateQueries({ queryKey: ["/api/fund/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/donations/recent"] });
       toast({
-        title: "Thank you for your donation!",
-        description: "Your contribution will help make Azerbaijan greener.",
+        title: t("toasts.donationSuccess"),
+        description: t("toasts.donationSuccessDesc"),
       });
       form.reset();
     },
     onError: () => {
       toast({
-        title: "Donation failed",
-        description: "Please try again later.",
+        title: t("toasts.donationError"),
+        description: t("toasts.tryAgainLater"),
         variant: "destructive",
       });
     },
