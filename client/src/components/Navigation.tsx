@@ -1,24 +1,27 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { ThemeToggle } from "./ThemeToggle";
-import { Menu, Sprout, X } from "lucide-react";
-
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/awareness", label: "Awareness" },
-  { href: "/green-rewards", label: "GreenRewards" },
-  { href: "/vendors", label: "Vendors" },
-  { href: "/support-us", label: "Support Us" },
-  { href: "/transparency", label: "Transparency" },
-  { href: "/about", label: "About Us" },
-];
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { Menu, Sprout } from "lucide-react";
 
 export function Navigation() {
+  const { t } = useTranslation();
   const [location] = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navLinks = [
+    { href: "/", label: t("nav.home") },
+    { href: "/awareness", label: t("nav.awareness") },
+    { href: "/green-rewards", label: t("nav.greenRewards") },
+    { href: "/vendors", label: t("nav.vendors") },
+    { href: "/support-us", label: t("nav.supportUs") },
+    { href: "/transparency", label: t("nav.transparency") },
+    { href: "/about", label: t("nav.aboutUs") },
+  ];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -55,7 +58,7 @@ export function Navigation() {
                 <Button
                   variant={location === link.href ? "secondary" : "ghost"}
                   className="text-sm font-medium"
-                  data-testid={`link-nav-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  data-testid={`link-nav-${link.href.replace(/\//g, "") || "home"}`}
                 >
                   {link.label}
                 </Button>
@@ -64,6 +67,7 @@ export function Navigation() {
           </div>
 
           <div className="flex items-center gap-2">
+            <LanguageSwitcher />
             <ThemeToggle />
             
             <div className="md:hidden">
@@ -82,7 +86,7 @@ export function Navigation() {
                           variant={location === link.href ? "secondary" : "ghost"}
                           className="w-full justify-start text-base"
                           onClick={() => setMobileOpen(false)}
-                          data-testid={`link-mobile-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+                          data-testid={`link-mobile-${link.href.replace(/\//g, "") || "home"}`}
                         >
                           {link.label}
                         </Button>
