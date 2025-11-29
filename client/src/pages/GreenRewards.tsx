@@ -8,6 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   Form,
   FormControl,
   FormField,
@@ -25,7 +34,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
-import type { Receipt, UserRewards, Vendor } from "@shared/schema";
+import type { Receipt, UserRewards, Vendor, WithdrawalRequest } from "@shared/schema";
 import {
   TreeDeciduous,
   Upload,
@@ -40,6 +49,10 @@ import {
   Sparkles,
   Scan,
   Loader2,
+  Wallet,
+  CreditCard,
+  Smartphone,
+  History,
 } from "lucide-react";
 
 const receiptFormSchema = z.object({
@@ -48,7 +61,14 @@ const receiptFormSchema = z.object({
   purchaseDate: z.string().min(1, "Please select a date"),
 });
 
+const withdrawalFormSchema = z.object({
+  pointsAmount: z.string().min(1, "Please enter the points to withdraw"),
+  paymentMethod: z.enum(["bank_transfer", "mobile_payment"]),
+  paymentDetails: z.string().min(1, "Please enter payment details"),
+});
+
 type ReceiptFormValues = z.infer<typeof receiptFormSchema>;
+type WithdrawalFormValues = z.infer<typeof withdrawalFormSchema>;
 
 interface OcrResult {
   vendorName: string | null;
@@ -64,6 +84,7 @@ export default function GreenRewards() {
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
+  const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
 
   const form = useForm<ReceiptFormValues>({
     resolver: zodResolver(receiptFormSchema),
@@ -71,6 +92,15 @@ export default function GreenRewards() {
       vendorName: "",
       purchaseAmount: "",
       purchaseDate: new Date().toISOString().split("T")[0],
+    },
+  });
+
+  const withdrawalForm = useForm<WithdrawalFormValues>({
+    resolver: zodResolver(withdrawalFormSchema),
+    defaultValues: {
+      pointsAmount: "",
+      paymentMethod: "bank_transfer",
+      paymentDetails: "",
     },
   });
 
@@ -84,6 +114,10 @@ export default function GreenRewards() {
 
   const { data: vendors, isLoading: vendorsLoading } = useQuery<Vendor[]>({
     queryKey: ["/api/vendors"],
+  });
+
+  const { data: withdrawals, isLoading: withdrawalsLoading } = useQuery<WithdrawalRequest[]>({
+    queryKey: ["/api/withdrawals"],
   });
 
   const submitReceiptMutation = useMutation({
@@ -110,6 +144,33 @@ export default function GreenRewards() {
       toast({
         title: "Submission failed",
         description: "Please try again later.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const submitWithdrawalMutation = useMutation({
+    mutationFn: async (data: WithdrawalFormValues) => {
+      return apiRequest("POST", "/api/withdrawals", {
+        pointsAmount: parseInt(data.pointsAmount),
+        paymentMethod: data.paymentMethod,
+        paymentDetails: data.paymentDetails,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/withdrawals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/rewards"] });
+      toast({
+        title: "Withdrawal request submitted!",
+        description: "Your request is being processed. You will receive your money soon.",
+      });
+      withdrawalForm.reset();
+      setWithdrawalDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Withdrawal failed",
+        description: error?.message || "Please try again later.",
         variant: "destructive",
       });
     },
@@ -213,6 +274,40 @@ export default function GreenRewards() {
       default:
         return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
     }
+  };
+
+  const getWithdrawalStatusBadge = (status: WithdrawalRequest["status"]) => {
+    switch (status) {
+      case "completed":
+        return <Badge variant="default" className="bg-green-600"><CheckCircle className="w-3 h-3 mr-1" />Completed</Badge>;
+      case "approved":
+        return <Badge variant="default" className="bg-blue-600"><Clock className="w-3 h-3 mr-1" />Processing</Badge>;
+      case "rejected":
+        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>;
+      default:
+        return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
+    }
+  };
+
+  const onWithdrawalSubmit = (data: WithdrawalFormValues) => {
+    const pointsAmount = parseInt(data.pointsAmount);
+    if (pointsAmount < 500) {
+      toast({
+        title: "Minimum not met",
+        description: "Minimum withdrawal is 500 points (5 AZN).",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (rewards && pointsAmount > rewards.availableForWithdrawal) {
+      toast({
+        title: "Insufficient points",
+        description: `You only have ${rewards.availableForWithdrawal} points available.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    submitWithdrawalMutation.mutate(data);
   };
 
   return (
@@ -513,6 +608,43 @@ export default function GreenRewards() {
                   )}
                 </CardContent>
               </Card>
+
+              {withdrawals && withdrawals.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <History className="h-5 w-5 text-primary" />
+                      Withdrawal History
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {withdrawals.map((withdrawal) => (
+                        <div
+                          key={withdrawal.id}
+                          className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
+                          data-testid={`withdrawal-item-${withdrawal.id}`}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Wallet className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <div className="font-medium">
+                                {withdrawal.pointsAmount} points to {withdrawal.moneyAmount.toFixed(2)} AZN
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {withdrawal.paymentMethod === "bank_transfer" ? "Bank Transfer" : "Mobile Payment"} - {new Date(withdrawal.createdAt).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+                          {getWithdrawalStatusBadge(withdrawal.status)}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             <div className="space-y-6">
@@ -560,6 +692,153 @@ export default function GreenRewards() {
                             Pending
                           </div>
                         </div>
+                      </div>
+
+                      <div className="bg-background rounded-lg p-4 text-center border-2 border-dashed border-primary/30">
+                        <div className="text-2xl font-bold text-green-600 mb-1">
+                          {rewards?.availableForWithdrawal || 0}
+                        </div>
+                        <div className="text-sm text-muted-foreground mb-3">
+                          Available to Withdraw
+                        </div>
+                        <div className="text-xs text-muted-foreground mb-3">
+                          = {((rewards?.availableForWithdrawal || 0) / 100).toFixed(2)} AZN
+                        </div>
+                        
+                        <Dialog open={withdrawalDialogOpen} onOpenChange={setWithdrawalDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              className="w-full" 
+                              size="sm"
+                              disabled={(rewards?.availableForWithdrawal || 0) < 500}
+                              data-testid="button-withdraw"
+                            >
+                              <Wallet className="mr-2 h-4 w-4" />
+                              Withdraw Points
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center gap-2">
+                                <Wallet className="h-5 w-5 text-primary" />
+                                Withdraw Points
+                              </DialogTitle>
+                              <DialogDescription>
+                                Convert your points to money. Minimum withdrawal: 500 points (5 AZN)
+                              </DialogDescription>
+                            </DialogHeader>
+                            <Form {...withdrawalForm}>
+                              <form onSubmit={withdrawalForm.handleSubmit(onWithdrawalSubmit)} className="space-y-4">
+                                <FormField
+                                  control={withdrawalForm.control}
+                                  name="pointsAmount"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Points to Withdraw</FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          type="number"
+                                          placeholder="Enter points (min 500)"
+                                          {...field}
+                                          data-testid="input-withdrawal-points"
+                                        />
+                                      </FormControl>
+                                      <div className="text-xs text-muted-foreground">
+                                        Available: {rewards?.availableForWithdrawal || 0} points 
+                                        ({field.value ? (parseInt(field.value) / 100).toFixed(2) : '0.00'} AZN)
+                                      </div>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                
+                                <FormField
+                                  control={withdrawalForm.control}
+                                  name="paymentMethod"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Payment Method</FormLabel>
+                                      <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl>
+                                          <SelectTrigger data-testid="select-payment-method">
+                                            <SelectValue placeholder="Select payment method" />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          <SelectItem value="bank_transfer">
+                                            <div className="flex items-center gap-2">
+                                              <CreditCard className="h-4 w-4" />
+                                              Bank Transfer
+                                            </div>
+                                          </SelectItem>
+                                          <SelectItem value="mobile_payment">
+                                            <div className="flex items-center gap-2">
+                                              <Smartphone className="h-4 w-4" />
+                                              Mobile Payment
+                                            </div>
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                <FormField
+                                  control={withdrawalForm.control}
+                                  name="paymentDetails"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>
+                                        {withdrawalForm.watch("paymentMethod") === "bank_transfer" 
+                                          ? "Bank Account / Card Number" 
+                                          : "Phone Number"}
+                                      </FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          placeholder={
+                                            withdrawalForm.watch("paymentMethod") === "bank_transfer"
+                                              ? "Enter your bank account or card number"
+                                              : "Enter your phone number"
+                                          }
+                                          {...field}
+                                          data-testid="input-payment-details"
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                <DialogFooter>
+                                  <Button
+                                    type="submit"
+                                    disabled={submitWithdrawalMutation.isPending}
+                                    data-testid="button-submit-withdrawal"
+                                  >
+                                    {submitWithdrawalMutation.isPending ? (
+                                      <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Processing...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Wallet className="mr-2 h-4 w-4" />
+                                        Request Withdrawal
+                                      </>
+                                    )}
+                                  </Button>
+                                </DialogFooter>
+                              </form>
+                            </Form>
+                          </DialogContent>
+                        </Dialog>
+                        
+                        {(rewards?.availableForWithdrawal || 0) < 500 && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Earn {500 - (rewards?.availableForWithdrawal || 0)} more points to withdraw
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
