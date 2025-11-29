@@ -25,8 +25,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
-import { partnerVendors } from "@/lib/data";
-import type { Receipt, UserRewards } from "@shared/schema";
+import type { Receipt, UserRewards, Vendor } from "@shared/schema";
 import {
   TreeDeciduous,
   Upload,
@@ -68,6 +67,10 @@ export default function GreenRewards() {
 
   const { data: receipts, isLoading: receiptsLoading } = useQuery<Receipt[]>({
     queryKey: ["/api/receipts"],
+  });
+
+  const { data: vendors, isLoading: vendorsLoading } = useQuery<Vendor[]>({
+    queryKey: ["/api/vendors"],
   });
 
   const submitReceiptMutation = useMutation({
@@ -246,11 +249,17 @@ export default function GreenRewards() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {partnerVendors.map((vendor) => (
-                                  <SelectItem key={vendor} value={vendor}>
-                                    {vendor}
-                                  </SelectItem>
-                                ))}
+                                {vendorsLoading ? (
+                                  <SelectItem value="loading" disabled>Loading vendors...</SelectItem>
+                                ) : vendors && vendors.length > 0 ? (
+                                  vendors.map((vendor) => (
+                                    <SelectItem key={vendor.id} value={vendor.name}>
+                                      {vendor.name}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <SelectItem value="none" disabled>No vendors available</SelectItem>
+                                )}
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -478,17 +487,25 @@ export default function GreenRewards() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {partnerVendors.map((vendor) => (
-                      <div
-                        key={vendor}
-                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <TreeDeciduous className="h-4 w-4 text-primary" />
+                    {vendorsLoading ? (
+                      <div className="text-center py-4 text-muted-foreground text-sm">Loading vendors...</div>
+                    ) : vendors && vendors.length > 0 ? (
+                      vendors.map((vendor) => (
+                        <div
+                          key={vendor.id}
+                          className="flex items-center gap-3 p-2 rounded-lg hover-elevate"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <TreeDeciduous className="h-4 w-4 text-primary" />
+                          </div>
+                          <span className="text-sm">{vendor.name}</span>
                         </div>
-                        <span className="text-sm">{vendor}</span>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground text-sm">
+                        No partner vendors yet
                       </div>
-                    ))}
+                    )}
                   </div>
                 </CardContent>
               </Card>

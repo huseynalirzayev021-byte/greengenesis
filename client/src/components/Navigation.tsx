@@ -9,7 +9,9 @@ const navLinks = [
   { href: "/", label: "Home" },
   { href: "/awareness", label: "Awareness" },
   { href: "/green-rewards", label: "GreenRewards" },
+  { href: "/vendors", label: "Vendors" },
   { href: "/support-us", label: "Support Us" },
+  { href: "/transparency", label: "Transparency" },
   { href: "/about", label: "About Us" },
 ];
 

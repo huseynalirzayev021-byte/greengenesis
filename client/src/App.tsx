@@ -10,6 +10,9 @@ import Awareness from "@/pages/Awareness";
 import GreenRewards from "@/pages/GreenRewards";
 import SupportUs from "@/pages/SupportUs";
 import AboutUs from "@/pages/AboutUs";
+import VendorDirectory from "@/pages/VendorDirectory";
+import FundTransparency from "@/pages/FundTransparency";
+import AdminDashboard from "@/pages/AdminDashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +23,9 @@ function Router() {
       <Route path="/green-rewards" component={GreenRewards} />
       <Route path="/support-us" component={SupportUs} />
       <Route path="/about" component={AboutUs} />
+      <Route path="/vendors" component={VendorDirectory} />
+      <Route path="/transparency" component={FundTransparency} />
+      <Route path="/admin" component={AdminDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

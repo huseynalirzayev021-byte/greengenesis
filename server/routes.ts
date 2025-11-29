@@ -5,8 +5,15 @@ import {
   ObjectStorageService,
   ObjectNotFoundError,
 } from "./objectStorage";
-import { insertReceiptSchema, insertDonationSchema } from "@shared/schema";
+import { 
+  insertReceiptSchema, 
+  insertDonationSchema,
+  insertVendorSchema,
+  insertFundAllocationSchema,
+  insertWithdrawalRequestSchema,
+} from "@shared/schema";
 import { randomUUID } from "crypto";
+import * as bcrypt from "bcryptjs";
 
 // Helper to get or create a visitor ID from cookies
 function getVisitorId(req: Request, res: Response): string {
@@ -22,10 +29,24 @@ function getVisitorId(req: Request, res: Response): string {
   return visitorId;
 }
 
+// Simple admin auth check via session
+function isAdminAuthenticated(req: Request): boolean {
+  return !!(req.session as any)?.adminId;
+}
+
+function requireAdmin(req: Request, res: Response, next: () => void) {
+  if (!isAdminAuthenticated(req)) {
+    return res.status(401).json({ error: "Admin authentication required" });
+  }
+  next();
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  
+  // ============ OBJECT STORAGE ROUTES ============
   
   // Serve public objects from object storage
   app.get("/public-objects/:filePath(*)", async (req, res) => {
@@ -90,6 +111,36 @@ export async function registerRoutes(
     }
   });
 
+  // ============ VENDOR ROUTES ============
+
+  // Get all approved vendors (public)
+  app.get("/api/vendors", async (req, res) => {
+    try {
+      const vendors = await storage.getApprovedVendors();
+      res.json(vendors);
+    } catch (error) {
+      console.error("Error getting vendors:", error);
+      res.status(500).json({ error: "Failed to get vendors" });
+    }
+  });
+
+  // Register a new vendor (public - pending approval)
+  app.post("/api/vendors", async (req, res) => {
+    try {
+      const validatedData = insertVendorSchema.parse(req.body);
+      const vendor = await storage.createVendor(validatedData);
+      res.status(201).json(vendor);
+    } catch (error) {
+      console.error("Error creating vendor:", error);
+      if (error instanceof Error && error.name === "ZodError") {
+        return res.status(400).json({ error: "Invalid vendor data" });
+      }
+      res.status(500).json({ error: "Failed to create vendor" });
+    }
+  });
+
+  // ============ RECEIPT ROUTES ============
+
   // Get user's receipts
   app.get("/api/receipts", async (req, res) => {
     try {
@@ -119,7 +170,6 @@ export async function registerRoutes(
         purchaseDate: validatedData.purchaseDate,
         imageUrl: validatedData.imageUrl,
         pointsEarned,
-        status: "pending", // All new receipts start as pending
       });
 
       res.status(201).json(receipt);
@@ -132,6 +182,8 @@ export async function registerRoutes(
     }
   });
 
+  // ============ REWARDS ROUTES ============
+
   // Get user's rewards
   app.get("/api/rewards", async (req, res) => {
     try {
@@ -143,6 +195,53 @@ export async function registerRoutes(
       res.status(500).json({ error: "Failed to get rewards" });
     }
   });
+
+  // Request withdrawal (convert points to money)
+  app.post("/api/withdrawals", async (req, res) => {
+    try {
+      const visitorId = getVisitorId(req, res);
+      const validatedData = insertWithdrawalRequestSchema.parse(req.body);
+      
+      // Check if user has enough available points
+      const rewards = await storage.getUserRewards(visitorId);
+      if (rewards.availableForWithdrawal < validatedData.pointsAmount) {
+        return res.status(400).json({ error: "Insufficient points available" });
+      }
+      
+      // Conversion rate: 100 points = 1 AZN
+      const moneyAmount = validatedData.pointsAmount / 100;
+      
+      const withdrawal = await storage.createWithdrawalRequest({
+        visitorId,
+        pointsAmount: validatedData.pointsAmount,
+        paymentMethod: validatedData.paymentMethod,
+        paymentDetails: validatedData.paymentDetails,
+        moneyAmount,
+      });
+      
+      res.status(201).json(withdrawal);
+    } catch (error) {
+      console.error("Error creating withdrawal:", error);
+      if (error instanceof Error && error.name === "ZodError") {
+        return res.status(400).json({ error: "Invalid withdrawal data" });
+      }
+      res.status(500).json({ error: "Failed to create withdrawal request" });
+    }
+  });
+
+  // Get user's withdrawal requests
+  app.get("/api/withdrawals", async (req, res) => {
+    try {
+      const visitorId = getVisitorId(req, res);
+      const withdrawals = await storage.getWithdrawalRequests(visitorId);
+      res.json(withdrawals);
+    } catch (error) {
+      console.error("Error getting withdrawals:", error);
+      res.status(500).json({ error: "Failed to get withdrawals" });
+    }
+  });
+
+  // ============ DONATION ROUTES ============
 
   // Get recent donations
   app.get("/api/donations/recent", async (req, res) => {
@@ -177,6 +276,8 @@ export async function registerRoutes(
     }
   });
 
+  // ============ FUND ROUTES ============
+
   // Get fund statistics
   app.get("/api/fund/stats", async (req, res) => {
     try {
@@ -185,6 +286,234 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error getting fund stats:", error);
       res.status(500).json({ error: "Failed to get fund stats" });
+    }
+  });
+
+  // Get fund allocations (transparency)
+  app.get("/api/fund/allocations", async (req, res) => {
+    try {
+      const allocations = await storage.getFundAllocations();
+      res.json(allocations);
+    } catch (error) {
+      console.error("Error getting allocations:", error);
+      res.status(500).json({ error: "Failed to get allocations" });
+    }
+  });
+
+  // ============ ADMIN AUTH ROUTES ============
+
+  // Admin login
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ error: "Username and password required" });
+      }
+      
+      const admin = await storage.getAdminByUsername(username);
+      if (!admin) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+      
+      const isValidPassword = await bcrypt.compare(password, admin.passwordHash);
+      if (!isValidPassword) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+      
+      // Set admin session
+      (req.session as any).adminId = admin.id;
+      (req.session as any).adminUsername = admin.username;
+      (req.session as any).adminRole = admin.role;
+      
+      res.json({ 
+        success: true, 
+        admin: { 
+          id: admin.id, 
+          username: admin.username, 
+          name: admin.name,
+          role: admin.role 
+        } 
+      });
+    } catch (error) {
+      console.error("Admin login error:", error);
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+
+  // Admin logout
+  app.post("/api/admin/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Logout failed" });
+      }
+      res.json({ success: true });
+    });
+  });
+
+  // Check admin session
+  app.get("/api/admin/session", (req, res) => {
+    if (isAdminAuthenticated(req)) {
+      res.json({ 
+        authenticated: true,
+        admin: {
+          id: (req.session as any).adminId,
+          username: (req.session as any).adminUsername,
+          role: (req.session as any).adminRole,
+        }
+      });
+    } else {
+      res.json({ authenticated: false });
+    }
+  });
+
+  // ============ ADMIN MANAGEMENT ROUTES ============
+
+  // Get all vendors (admin only)
+  app.get("/api/admin/vendors", (req, res, next) => requireAdmin(req, res, next), async (req, res) => {
+    try {
+      const vendors = await storage.getVendors();
+      res.json(vendors);
+    } catch (error) {
+      console.error("Error getting vendors:", error);
+      res.status(500).json({ error: "Failed to get vendors" });
+    }
+  });
+
+  // Update vendor status (admin only)
+  app.patch("/api/admin/vendors/:id/status", (req, res, next) => requireAdmin(req, res, next), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (!["approved", "rejected", "pending"].includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+      
+      const vendor = await storage.updateVendorStatus(id, status);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      
+      res.json(vendor);
+    } catch (error) {
+      console.error("Error updating vendor:", error);
+      res.status(500).json({ error: "Failed to update vendor" });
+    }
+  });
+
+  // Get all receipts (admin only)
+  app.get("/api/admin/receipts", (req, res, next) => requireAdmin(req, res, next), async (req, res) => {
+    try {
+      const receipts = await storage.getAllReceipts();
+      res.json(receipts);
+    } catch (error) {
+      console.error("Error getting receipts:", error);
+      res.status(500).json({ error: "Failed to get receipts" });
+    }
+  });
+
+  // Update receipt status (admin only)
+  app.patch("/api/admin/receipts/:id/status", (req, res, next) => requireAdmin(req, res, next), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status, adminNotes } = req.body;
+      
+      if (!["approved", "rejected", "pending"].includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+      
+      const receipt = await storage.updateReceiptStatus(id, status, adminNotes);
+      if (!receipt) {
+        return res.status(404).json({ error: "Receipt not found" });
+      }
+      
+      res.json(receipt);
+    } catch (error) {
+      console.error("Error updating receipt:", error);
+      res.status(500).json({ error: "Failed to update receipt" });
+    }
+  });
+
+  // Get all withdrawal requests (admin only)
+  app.get("/api/admin/withdrawals", (req, res, next) => requireAdmin(req, res, next), async (req, res) => {
+    try {
+      const withdrawals = await storage.getWithdrawalRequests();
+      res.json(withdrawals);
+    } catch (error) {
+      console.error("Error getting withdrawals:", error);
+      res.status(500).json({ error: "Failed to get withdrawals" });
+    }
+  });
+
+  // Update withdrawal status (admin only)
+  app.patch("/api/admin/withdrawals/:id/status", (req, res, next) => requireAdmin(req, res, next), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status, adminNotes } = req.body;
+      
+      if (!["approved", "rejected", "pending", "completed"].includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+      
+      const withdrawal = await storage.updateWithdrawalStatus(id, status, adminNotes);
+      if (!withdrawal) {
+        return res.status(404).json({ error: "Withdrawal request not found" });
+      }
+      
+      res.json(withdrawal);
+    } catch (error) {
+      console.error("Error updating withdrawal:", error);
+      res.status(500).json({ error: "Failed to update withdrawal" });
+    }
+  });
+
+  // Create fund allocation (admin only)
+  app.post("/api/admin/fund/allocations", (req, res, next) => requireAdmin(req, res, next), async (req, res) => {
+    try {
+      const validatedData = insertFundAllocationSchema.parse(req.body);
+      const allocation = await storage.createFundAllocation(validatedData);
+      res.status(201).json(allocation);
+    } catch (error) {
+      console.error("Error creating allocation:", error);
+      if (error instanceof Error && error.name === "ZodError") {
+        return res.status(400).json({ error: "Invalid allocation data" });
+      }
+      res.status(500).json({ error: "Failed to create allocation" });
+    }
+  });
+
+  // Create initial admin (only works if no admins exist)
+  app.post("/api/admin/setup", async (req, res) => {
+    try {
+      const { username, password, name } = req.body;
+      
+      if (!username || !password || !name) {
+        return res.status(400).json({ error: "Username, password, and name required" });
+      }
+      
+      // Check if any admin already exists
+      const existingAdmin = await storage.getAdminByUsername(username);
+      if (existingAdmin) {
+        return res.status(400).json({ error: "Admin setup already completed" });
+      }
+      
+      const passwordHash = await bcrypt.hash(password, 10);
+      const admin = await storage.createAdminUser({
+        username,
+        passwordHash,
+        name,
+        role: "superadmin",
+      });
+      
+      res.status(201).json({ 
+        success: true, 
+        message: "Admin account created",
+        admin: { id: admin.id, username: admin.username, name: admin.name }
+      });
+    } catch (error) {
+      console.error("Admin setup error:", error);
+      res.status(500).json({ error: "Admin setup failed" });
     }
   });
 
