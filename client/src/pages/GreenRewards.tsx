@@ -38,6 +38,8 @@ import {
   ShoppingBag,
   ArrowRight,
   Sparkles,
+  Scan,
+  Loader2,
 } from "lucide-react";
 
 const receiptFormSchema = z.object({
@@ -48,9 +50,20 @@ const receiptFormSchema = z.object({
 
 type ReceiptFormValues = z.infer<typeof receiptFormSchema>;
 
+interface OcrResult {
+  vendorName: string | null;
+  amount: number | null;
+  date: string | null;
+  confidence: number;
+  isPartnerVendor: boolean;
+  rawVendorName: string | null;
+}
+
 export default function GreenRewards() {
   const { toast } = useToast();
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
 
   const form = useForm<ReceiptFormValues>({
     resolver: zodResolver(receiptFormSchema),
@@ -91,6 +104,7 @@ export default function GreenRewards() {
       });
       form.reset();
       setUploadedImageUrl(null);
+      setOcrResult(null);
     },
     onError: () => {
       toast({
@@ -113,6 +127,56 @@ export default function GreenRewards() {
     };
   };
 
+  const analyzeReceiptWithOcr = async (imagePath: string) => {
+    setIsAnalyzing(true);
+    setOcrResult(null);
+    
+    try {
+      const response = await apiRequest("POST", "/api/receipts/ocr", {
+        imageUrl: imagePath,
+      });
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        const ocrData = result.data as OcrResult;
+        setOcrResult(ocrData);
+        
+        // Auto-fill form fields with OCR data
+        if (ocrData.vendorName) {
+          form.setValue("vendorName", ocrData.vendorName);
+        }
+        if (ocrData.amount !== null) {
+          form.setValue("purchaseAmount", ocrData.amount.toString());
+        }
+        if (ocrData.date) {
+          form.setValue("purchaseDate", ocrData.date);
+        }
+        
+        toast({
+          title: "Receipt analyzed!",
+          description: ocrData.isPartnerVendor 
+            ? `Found partner vendor: ${ocrData.vendorName}` 
+            : "Data extracted. Please verify the details.",
+        });
+      } else {
+        toast({
+          title: "Analysis incomplete",
+          description: "Could not fully analyze the receipt. Please fill in details manually.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("OCR error:", error);
+      toast({
+        title: "Analysis failed",
+        description: "Could not analyze receipt. Please fill in details manually.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const handleUploadComplete = async (result: { successful?: { uploadURL?: string }[] }) => {
     if (result.successful && result.successful.length > 0) {
       const uploadedUrl = result.successful[0].uploadURL;
@@ -124,8 +188,11 @@ export default function GreenRewards() {
         setUploadedImageUrl(data.objectPath);
         toast({
           title: "Image uploaded!",
-          description: "Your receipt image has been uploaded successfully.",
+          description: "Analyzing receipt with AI...",
         });
+        
+        // Automatically analyze the receipt with OCR
+        await analyzeReceiptWithOcr(data.objectPath);
       }
     }
   };
@@ -309,7 +376,7 @@ export default function GreenRewards() {
 
                       <div className="space-y-3">
                         <FormLabel>Receipt Image</FormLabel>
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-wrap items-center gap-4">
                           <ObjectUploader
                             maxNumberOfFiles={1}
                             maxFileSize={10485760}
@@ -319,7 +386,13 @@ export default function GreenRewards() {
                             <Upload className="mr-2 h-4 w-4" />
                             Upload Receipt Photo
                           </ObjectUploader>
-                          {uploadedImageUrl && (
+                          {isAnalyzing && (
+                            <Badge variant="secondary" className="gap-1">
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              Analyzing with AI...
+                            </Badge>
+                          )}
+                          {uploadedImageUrl && !isAnalyzing && (
                             <Badge variant="secondary" className="gap-1">
                               <CheckCircle className="h-3 w-3" />
                               Image uploaded
@@ -327,8 +400,44 @@ export default function GreenRewards() {
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Upload a clear photo of your purchase receipt (max 10MB)
+                          Upload a clear photo of your purchase receipt (max 10MB). AI will automatically extract the details.
                         </p>
+                        
+                        {ocrResult && (
+                          <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-2">
+                            <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                              <Scan className="h-4 w-4" />
+                              AI Analysis Results
+                              <Badge variant="outline" className="ml-auto text-xs">
+                                {Math.round(ocrResult.confidence * 100)}% confidence
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">Vendor: </span>
+                                <span className="font-medium">{ocrResult.vendorName || "Not detected"}</span>
+                                {ocrResult.isPartnerVendor && (
+                                  <Badge variant="default" className="ml-1 text-xs bg-green-600">Partner</Badge>
+                                )}
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Amount: </span>
+                                <span className="font-medium">
+                                  {ocrResult.amount !== null ? `${ocrResult.amount} AZN` : "Not detected"}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Date: </span>
+                                <span className="font-medium">{ocrResult.date || "Not detected"}</span>
+                              </div>
+                            </div>
+                            {ocrResult.rawVendorName && ocrResult.rawVendorName !== ocrResult.vendorName && (
+                              <p className="text-xs text-muted-foreground">
+                                Original vendor name on receipt: "{ocrResult.rawVendorName}"
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <Button

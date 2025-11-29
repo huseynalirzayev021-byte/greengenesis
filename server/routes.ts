@@ -14,6 +14,7 @@ import {
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import * as bcrypt from "bcryptjs";
+import OpenAI from "openai";
 
 // Helper to get or create a visitor ID from cookies
 function getVisitorId(req: Request, res: Response): string {
@@ -108,6 +109,109 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error normalizing image path:", error);
       res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // OCR Receipt Analysis - Extract vendor, amount, date from receipt image
+  app.post("/api/receipts/ocr", async (req, res) => {
+    const { imageUrl } = req.body;
+    
+    if (!imageUrl) {
+      return res.status(400).json({ error: "imageUrl is required" });
+    }
+
+    try {
+      const openai = new OpenAI({
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+      });
+
+      // Get the approved vendor names for matching
+      const approvedVendors = await storage.getApprovedVendors();
+      const vendorNames = approvedVendors.map(v => v.name);
+
+      // Construct full image URL if it's a relative path
+      let fullImageUrl = imageUrl;
+      if (imageUrl.startsWith('/objects/')) {
+        const host = req.get('host') || 'localhost:5000';
+        const protocol = req.protocol || 'http';
+        fullImageUrl = `${protocol}://${host}${imageUrl}`;
+      }
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `You are a receipt analysis assistant. Extract the following information from receipt images:
+1. Vendor/Store name - Try to match with these partner vendors if possible: ${vendorNames.join(", ")}
+2. Total amount (in AZN - Azerbaijani Manat)
+3. Date of purchase (format: YYYY-MM-DD)
+
+Respond ONLY with a valid JSON object in this exact format:
+{
+  "vendorName": "extracted vendor name or best match from partner list",
+  "amount": 123.45,
+  "date": "2024-01-15",
+  "confidence": 0.85,
+  "isPartnerVendor": true,
+  "rawVendorName": "original vendor name from receipt"
+}
+
+If you cannot extract a field, use null for that field. The confidence should be between 0 and 1.`
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Please analyze this receipt image and extract the vendor name, total amount, and date."
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: fullImageUrl
+                }
+              }
+            ]
+          }
+        ],
+        max_tokens: 500,
+      });
+
+      const content = response.choices[0]?.message?.content;
+      if (!content) {
+        return res.status(500).json({ error: "Failed to analyze receipt" });
+      }
+
+      // Parse the JSON response
+      try {
+        // Extract JSON from the response (handle markdown code blocks)
+        let jsonStr = content;
+        const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          jsonStr = jsonMatch[1];
+        }
+        
+        const ocrResult = JSON.parse(jsonStr.trim());
+        res.json({
+          success: true,
+          data: {
+            vendorName: ocrResult.vendorName || null,
+            amount: ocrResult.amount || null,
+            date: ocrResult.date || null,
+            confidence: ocrResult.confidence || 0,
+            isPartnerVendor: ocrResult.isPartnerVendor || false,
+            rawVendorName: ocrResult.rawVendorName || ocrResult.vendorName || null,
+          }
+        });
+      } catch (parseError) {
+        console.error("Failed to parse OCR response:", content);
+        res.status(500).json({ error: "Failed to parse receipt data" });
+      }
+    } catch (error) {
+      console.error("OCR analysis error:", error);
+      res.status(500).json({ error: "Failed to analyze receipt" });
     }
   });
 
