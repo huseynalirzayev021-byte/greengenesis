@@ -215,6 +215,77 @@ If you cannot extract a field, use null for that field. The confidence should be
     }
   });
 
+  // ============ CHATBOT ROUTES ============
+  
+  // Eco Assistant Chatbot - Answers questions about ecology and the GreenGenesis app
+  app.post("/api/chatbot", async (req, res) => {
+    const { message, language = "en" } = req.body;
+    
+    if (!message || typeof message !== "string") {
+      return res.status(400).json({ error: "message is required" });
+    }
+
+    try {
+      // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+      const openai = new OpenAI({
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+      });
+
+      const systemPrompt = language === "az" 
+        ? `Siz GreenGenesis üçün Eko Köməkçisiniz - Azərbaycana yönəlmiş ekoloji maarifləndirmə platforması. Siz kömək edirsiniz:
+1. Ekologiya və ətraf mühitin qorunması haqqında sualları cavablandırmaq
+2. GreenGenesis platformasının xüsusiyyətlərini izah etmək:
+   - Ana Səhifə: Azərbaycan haqqında ekoloji faktlar
+   - Maarifləndirmə: Ekoloji təsir kalkulyatoru (karbon izi hesablayıcısı)
+   - YaşılMükafat: Tərəfdaş satıcılardan alış-verişlər üçün mükafat proqramı (xərclənən hər 1 AZN = 10 xal, 100 xal = 1 AZN mükafat)
+   - Dəstək Ol: Azərbaycanın ətraf mühit layihələrinə ianə
+   - Satıcılar: Tərəfdaş mağazalar kataloqu
+   - Şəffaflıq: Fondların necə istifadə edildiyini göstərir
+3. Ekoloji yaşam tövsiyələri verin
+
+Qısa, dostcasına və faydalı cavablar verin. Azərbaycan kontekstinə fokuslanın. Azərbaycan dilində cavab verin.`
+        : `You are an Eco Assistant for GreenGenesis - an environmental awareness platform focused on Azerbaijan. You help with:
+1. Answering questions about ecology and environmental protection
+2. Explaining the GreenGenesis platform features:
+   - Home: Environmental facts about Azerbaijan
+   - Awareness: Environmental impact calculator (carbon footprint calculator)
+   - GreenRewards: Rewards program for purchases at partner vendors (1 AZN spent = 10 points, 100 points = 1 AZN reward)
+   - Support Us: Donate to Azerbaijan's environmental projects
+   - Vendors: Directory of partner stores
+   - Transparency: Shows how funds are used
+3. Providing eco-friendly living tips
+
+Keep responses concise, friendly, and helpful. Focus on Azerbaijan context when relevant. Respond in English.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: systemPrompt
+          },
+          {
+            role: "user",
+            content: message
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.7,
+      });
+
+      const reply = response.choices[0]?.message?.content;
+      if (!reply) {
+        return res.status(500).json({ error: "Failed to generate response" });
+      }
+
+      res.json({ reply });
+    } catch (error) {
+      console.error("Chatbot error:", error);
+      res.status(500).json({ error: "Failed to process message" });
+    }
+  });
+
   // ============ VENDOR ROUTES ============
 
   // Get all approved vendors (public)

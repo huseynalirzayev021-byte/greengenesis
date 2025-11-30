@@ -117,18 +117,16 @@ export default function SupportUs() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-2 mb-6">
               <Heart className="h-4 w-4 text-red-400" />
-              <span className="text-sm text-white/90">Environmental Fund</span>
+              <span className="text-sm text-white/90">{t("supportUs.heroBadge")}</span>
             </div>
             
             <h1 className="text-4xl lg:text-5xl font-bold text-white mb-6">
-              Support Our
-              <span className="block text-green-400">Green Mission</span>
+              {t("supportUs.heroTitle")}
+              <span className="block text-green-400">{t("supportUs.heroTitleHighlight")}</span>
             </h1>
             
             <p className="text-lg text-white/80 leading-relaxed">
-              Your donations directly fund tree planting initiatives, environmental 
-              education programs, and conservation efforts across Azerbaijan. Every 
-              contribution makes a real difference.
+              {t("supportUs.heroDescription")}
             </p>
           </div>
         </div>
@@ -140,9 +138,9 @@ export default function SupportUs() {
             <CardContent className="p-6 md:p-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
                 <div>
-                  <h3 className="text-lg font-semibold mb-1">2024 Funding Goal</h3>
+                  <h3 className="text-lg font-semibold mb-1">{t("supportUs.fundingGoalTitle")}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Help us reach our target for this year's environmental projects
+                    {t("supportUs.fundingGoalDesc")}
                   </p>
                 </div>
                 <div className="text-right">
@@ -150,14 +148,14 @@ export default function SupportUs() {
                     {currentFunding.toLocaleString()} AZN
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    of {fundingGoal.toLocaleString()} AZN goal
+                    {t("supportUs.ofGoal", { goal: fundingGoal.toLocaleString() })}
                   </div>
                 </div>
               </div>
               <Progress value={progress} className="h-3 mb-4" />
               <div className="flex justify-between text-sm text-muted-foreground">
-                <span>{fundStats?.donorCount || 0} donors</span>
-                <span>{progress.toFixed(1)}% funded</span>
+                <span>{fundStats?.donorCount || 0} {t("supportUs.donors")}</span>
+                <span>{progress.toFixed(1)}% {t("supportUs.funded")}</span>
               </div>
             </CardContent>
           </Card>
@@ -172,14 +170,14 @@ export default function SupportUs() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <HandHeart className="h-5 w-5 text-primary" />
-                    Make a Donation
+                    {t("supportUs.makeDonation")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                       <div>
-                        <FormLabel className="mb-3 block">Select Amount (AZN)</FormLabel>
+                        <FormLabel className="mb-3 block">{t("supportUs.selectAmount")}</FormLabel>
                         <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-4">
                           {presetAmounts.map((amount) => (
                             <Button
@@ -206,7 +204,7 @@ export default function SupportUs() {
                                 <div className="relative">
                                   <Input
                                     type="number"
-                                    placeholder="Enter custom amount"
+                                    placeholder={t("supportUs.enterAmount")}
                                     className="pl-12"
                                     {...field}
                                     onFocus={() => setCustomAmount(true)}

@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Navigation } from "@/components/Navigation";
 import "./lib/i18n";
 import { Footer } from "@/components/Footer";
+import EcoChatbot from "@/components/EcoChatbot";
 import Home from "@/pages/Home";
 import Awareness from "@/pages/Awareness";
 import GreenRewards from "@/pages/GreenRewards";
@@ -43,6 +44,7 @@ function App() {
           </main>
           <Footer />
         </div>
+        <EcoChatbot />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

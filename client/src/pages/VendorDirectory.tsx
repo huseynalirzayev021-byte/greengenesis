@@ -117,34 +117,33 @@ export default function VendorDirectory() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-2 mb-6">
               <Store className="h-4 w-4 text-green-400" />
-              <span className="text-sm text-white/90">Partner Network</span>
+              <span className="text-sm text-white/90">{t("vendors.heroBadge")}</span>
             </div>
             
             <h1 className="text-4xl lg:text-5xl font-bold text-white mb-6">
-              Partner Vendor
-              <span className="block text-green-400">Directory</span>
+              {t("vendors.heroTitle")}
+              <span className="block text-green-400">{t("vendors.heroTitleHighlight")}</span>
             </h1>
             
             <p className="text-lg text-white/80 leading-relaxed mb-8">
-              Browse our network of approved nurseries and plant shops. Purchase from these partners
-              to earn reward points while contributing to a greener Azerbaijan.
+              {t("vendors.heroDescription")}
             </p>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="lg" className="bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20">
                   <Plus className="mr-2 h-5 w-5" />
-                  Register Your Business
+                  {t("vendors.registerBusiness")}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <TreeDeciduous className="h-5 w-5 text-primary" />
-                    Register as Partner Vendor
+                    {t("vendors.registrationTitle")}
                   </DialogTitle>
                   <DialogDescription>
-                    Join our network of eco-friendly businesses. Your registration will be reviewed by our team.
+                    {t("vendors.registrationDesc")}
                   </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
@@ -154,9 +153,9 @@ export default function VendorDirectory() {
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Business Name</FormLabel>
+                          <FormLabel>{t("vendors.businessName")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Green Gardens Nursery" {...field} data-testid="input-vendor-name" />
+                            <Input placeholder={t("vendors.businessNamePlaceholder")} {...field} data-testid="input-vendor-name" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -168,10 +167,10 @@ export default function VendorDirectory() {
                       name="description"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Description</FormLabel>
+                          <FormLabel>{t("vendors.description")}</FormLabel>
                           <FormControl>
                             <Textarea 
-                              placeholder="Tell us about your business and the products you offer..." 
+                              placeholder={t("vendors.descriptionPlaceholder")} 
                               className="resize-none"
                               {...field} 
                               data-testid="input-vendor-description"
@@ -187,9 +186,9 @@ export default function VendorDirectory() {
                       name="address"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Address</FormLabel>
+                          <FormLabel>{t("vendors.address")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="123 Green Street, Baku" {...field} data-testid="input-vendor-address" />
+                            <Input placeholder={t("vendors.addressPlaceholder")} {...field} data-testid="input-vendor-address" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -202,7 +201,7 @@ export default function VendorDirectory() {
                         name="phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Phone</FormLabel>
+                            <FormLabel>{t("vendors.contactPhone")}</FormLabel>
                             <FormControl>
                               <Input placeholder="+994 12 345 6789" {...field} data-testid="input-vendor-phone" />
                             </FormControl>
@@ -216,7 +215,7 @@ export default function VendorDirectory() {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel>{t("vendors.contactEmail")}</FormLabel>
                             <FormControl>
                               <Input type="email" placeholder="info@business.az" {...field} data-testid="input-vendor-email" />
                             </FormControl>
@@ -231,7 +230,7 @@ export default function VendorDirectory() {
                       name="website"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Website (Optional)</FormLabel>
+                          <FormLabel>{t("vendors.website")}</FormLabel>
                           <FormControl>
                             <Input placeholder="https://yourbusiness.az" {...field} data-testid="input-vendor-website" />
                           </FormControl>
