@@ -105,22 +105,22 @@ export default function Home() {
               <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
                 <Users className="h-7 w-7 text-primary" />
               </div>
-              <div className="text-3xl font-bold text-foreground">500+</div>
+              <div className="text-3xl font-bold text-foreground">4</div>
               <div className="text-sm text-muted-foreground">{t("home.activeMembers")}</div>
             </div>
             <div className="text-center space-y-2">
               <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
                 <Heart className="h-7 w-7 text-primary" />
               </div>
-              <div className="text-3xl font-bold text-foreground">15,000</div>
+              <div className="text-3xl font-bold text-foreground">{t("home.fundsRaisedCount")}</div>
               <div className="text-sm text-muted-foreground">{t("home.fundsRaised")}</div>
             </div>
             <div className="text-center space-y-2">
               <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
                 <Leaf className="h-7 w-7 text-primary" />
               </div>
-              <div className="text-3xl font-bold text-foreground">10</div>
-              <div className="text-sm text-muted-foreground">Projects Active</div>
+              <div className="text-3xl font-bold text-foreground">1</div>
+              <div className="text-sm text-muted-foreground">{t("home.projectsActive")}</div>
             </div>
           </div>
         </div>
