@@ -98,7 +98,7 @@ export default function Home() {
               <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
                 <Trees className="h-7 w-7 text-primary" />
               </div>
-              <div className="text-3xl font-bold text-foreground">2,500+</div>
+              <div className="text-3xl font-bold text-foreground">{t("home.treesPlantedCount")}</div>
               <div className="text-sm text-muted-foreground">{t("home.treesPlanted")}</div>
             </div>
             <div className="text-center space-y-2">
