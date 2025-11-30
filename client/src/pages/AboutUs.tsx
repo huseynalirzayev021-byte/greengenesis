@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTeamMembers } from "@/lib/data";
 import { Link } from "wouter";
 import {
@@ -14,6 +14,18 @@ import {
   GraduationCap,
   Quote,
 } from "lucide-react";
+
+import huseynImg from "@assets/huseyn_1764488698455.jpg";
+import inciImg from "@assets/inci_1764488698454.jpg";
+import sultanaliImg from "@assets/sultaneli_1764488698456.jpg";
+import hamidImg from "@assets/hemid_1764488698453.jpg";
+
+const teamImages: Record<string, string> = {
+  huseyn: huseynImg,
+  inci: inciImg,
+  sultaneli: sultanaliImg,
+  hamid: hamidImg,
+};
 
 export default function AboutUs() {
   const { t } = useTranslation();
@@ -89,6 +101,13 @@ export default function AboutUs() {
               >
                 <CardContent className="pt-8 pb-6">
                   <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-primary/20">
+                    {member.avatarUrl && teamImages[member.avatarUrl] && (
+                      <AvatarImage 
+                        src={teamImages[member.avatarUrl]} 
+                        alt={member.name}
+                        className="object-cover"
+                      />
+                    )}
                     <AvatarFallback className="text-2xl font-semibold bg-primary/10 text-primary">
                       {getInitials(member.name)}
                     </AvatarFallback>

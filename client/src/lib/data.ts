@@ -186,39 +186,43 @@ export function useTeamMembers(): TeamMember[] {
   return [
     {
       id: 1,
-      name: "Aysel Məmmədova",
+      name: isAz ? "Hüseyn Alırzayev" : "Huseyn Alirzayev",
       role: isAz ? "Layihə Rəhbəri" : "Project Lead",
       school: isAz ? "Bakı Avropa Liseyi" : "Baku European Lyceum",
       bio: isAz 
         ? "Ətraf mühit elminə həvəsli və Azərbaycanı yaşıllaşdırmaq üçün təşəbbüslərə rəhbərlik edir. Ətraf mühit mühəndisi olmağı arzulayır."
-        : "Passionate about environmental science and leading initiatives to make Azerbaijan greener. Dreams of becoming an environmental engineer."
+        : "Passionate about environmental science and leading initiatives to make Azerbaijan greener. Dreams of becoming an environmental engineer.",
+      avatarUrl: "huseyn"
     },
     {
       id: 2,
-      name: "Rəşad Əliyev",
+      name: isAz ? "İnci Əhmədzadə" : "Inci Ahmedzade",
       role: isAz ? "Texnologiya Rəhbəri" : "Technology Lead",
       school: isAz ? "Bakı Oksford Məktəbi" : "Baku Oxford School",
       bio: isAz
         ? "Kodlamaya olan sevgisini ətraf mühit aktivizmi ilə birləşdirir. Texnologiyanın ən böyük ətraf mühit problemlərini həll edə biləcəyinə inanır."
-        : "Combining love for coding with environmental activism. Believes technology can solve our biggest environmental challenges."
+        : "Combining love for coding with environmental activism. Believes technology can solve our biggest environmental challenges.",
+      avatarUrl: "inci"
     },
     {
       id: 3,
-      name: "Leyla Hüseynova",
+      name: isAz ? "Sultanəli Cabbarlı" : "Soltanali Jabbarli",
       role: isAz ? "İcma Əlaqələri" : "Community Outreach",
       school: isAz ? "Gimnaziya 6" : "Gymnasium 6",
       bio: isAz
         ? "Yerli icmalarda ətraf mühit maarifləndirməsini yaymağa həsr olunub. Ağac əkmə tədbirləri və təhsil seminarları təşkil edir."
-        : "Dedicated to spreading environmental awareness in local communities. Organizes tree planting events and educational workshops."
+        : "Dedicated to spreading environmental awareness in local communities. Organizes tree planting events and educational workshops.",
+      avatarUrl: "sultaneli"
     },
     {
       id: 4,
-      name: "Tural Qasımov",
+      name: isAz ? "Həmid Səmədzadə" : "Hamid Samadzade",
       role: isAz ? "Tədqiqat & Məzmun" : "Research & Content",
       school: isAz ? "Bakı Fizika-Riyaziyyat Liseyi" : "Baku Physics-Math Lyceum",
       bio: isAz
         ? "İqlim dəyişikliyinin arxasındakı elmlə maraqlanan. Başqalarının ətraf mühit məsələlərini anlamasına kömək etmək üçün təhsil məzmunu yaradır."
-        : "Fascinated by the science behind climate change. Creates educational content to help others understand environmental issues."
+        : "Fascinated by the science behind climate change. Creates educational content to help others understand environmental issues.",
+      avatarUrl: "hamid"
     }
   ];
 }
